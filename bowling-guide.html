@@ -1,0 +1,88 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bowlers Explained – Cric Gyan</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Rajdhani:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{--c:#4df3ff;--m:#ff5fd2;--g:#9dff6a;--bg:#020a12;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{margin:0;color:#d8fbff;font:500 18px/1.35 Rajdhani,'Arial Narrow',sans-serif;background:var(--bg)}
+body{background:radial-gradient(ellipse at 50% 0,#08334a 0,#020a12 62%) fixed var(--bg);min-height:100%}
+nav{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:10px 12px;max-width:1100px;margin:auto}
+nav b{font:700 15px Orbitron,sans-serif;color:var(--c);margin-right:8px;letter-spacing:.08em}
+nav a{color:var(--c);border:1px solid #1d6f80;border-radius:20px;padding:3px 13px;text-decoration:none}
+nav a.on{background:var(--c);color:#02202a}
+h1{font:700 clamp(26px,5vw,40px) Orbitron,sans-serif;margin:6px 12px 2px;max-width:1100px;margin-inline:auto;padding-inline:12px;color:#fff;text-shadow:0 0 18px var(--c)}
+.sub{margin:0 auto 10px;max-width:1100px;padding:0 12px;opacity:.8}
+main{display:grid;gap:14px;max-width:1100px;margin:auto;padding:0 12px 28px}
+@media(min-width:900px){main{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}}
+.stage{position:relative;border:1px solid #1d6f80;border-radius:16px;overflow:hidden;background:rgba(2,20,32,.65);box-shadow:inset 0 0 50px rgba(77,243,255,.12),0 0 24px rgba(77,243,255,.12)}
+.stage::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(77,243,255,.05) 0 1px,transparent 1px 3px)}
+canvas{display:block;width:100%;height:auto;touch-action:pan-y;cursor:grab}
+.bar{display:flex;gap:8px;padding:8px;flex-wrap:wrap;border-top:1px solid #12485a;position:relative;z-index:2}
+button{font:600 16px Rajdhani,sans-serif;color:var(--c);background:transparent;border:1px solid #1d6f80;border-radius:10px;padding:5px 12px;cursor:pointer}
+button:hover,button[aria-pressed=true]{background:rgba(77,243,255,.16);border-color:var(--c);box-shadow:0 0 12px rgba(77,243,255,.35)}
+button:focus-visible,nav a:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chips button{font-size:17px}
+#info{border:1px solid #1d6f80;border-radius:16px;padding:14px 16px;background:rgba(2,20,32,.6)}
+#info h2{font:700 24px Orbitron,sans-serif;margin:6px 0;color:#fff;text-shadow:0 0 12px var(--c)}
+.tag{display:inline-block;font-size:15px;border:1px solid var(--m);color:var(--m);border-radius:20px;padding:0 10px}
+#info ul{padding-left:20px;margin:8px 0 0}#info li{margin:3px 0}
+.hint{font-size:15px;opacity:.6;margin-top:10px}
+</style></head><body>
+<nav><b>CRIC GYAN</b><a href="index.html">Playground</a><a href="bowling-guide.html" class="on" aria-current="page">Bowlers</a><a href="batting-guide.html">Batting</a><a href="stadium-guide.html">Stadium</a></nav>
+<h1>Bowlers Explained</h1><p class="sub">Pick a delivery and watch it from above and from the side. Shown for a right-arm bowler to a right-handed batter.</p>
+<main><section><div class="stage"><canvas id="c" width="600" height="520" aria-label="Bowlers Explained hologram"></canvas>
+<div class="bar"><button id="rp">Replay</button><button id="sl" aria-pressed="false">Slow-mo</button><button id="pa" aria-pressed="false">Pause</button><button id="sp" aria-pressed="false" hidden>Auto-rotate</button></div></div></section>
+<aside><div class="chips" id="list"></div><article id="info"></article><div class="hint">Dashed pink = the path the batter expects. Use the ← → keys to switch.</div></aside></main>
+<script>
+const $=s=>document.querySelector(s),cv=$('#c'),g=cv.getContext('2d'),W=600,H=520;
+const lerp=(a,b,u)=>a+(b-a)*u,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+let cur=0,pt=0,last=performance.now(),slow=false,paused=false,spin=false;
+const glow=(c,b)=>{g.strokeStyle=c;g.fillStyle=c;g.shadowColor=c;g.shadowBlur=b},noglow=()=>{g.shadowBlur=0};
+function lab(s,x,y,c='#d8fbff',sz=18,al='center'){g.font='600 '+sz+'px Rajdhani,sans-serif';g.textAlign=al;g.fillStyle=c;g.shadowColor=c;g.shadowBlur=8;g.fillText(s,x,y);g.shadowBlur=0}
+function base(now){g.clearRect(0,0,W,H);g.strokeStyle='rgba(77,243,255,.07)';g.lineWidth=1;for(let y=0;y<H;y+=26){g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke()}
+ const sy=(now/12)%H,gr=g.createLinearGradient(0,sy-30,0,sy);gr.addColorStop(0,'rgba(77,243,255,0)');gr.addColorStop(1,'rgba(77,243,255,.12)');g.fillStyle=gr;g.fillRect(0,sy-30,W,30)}
+function ball(x,y,r,a){glow('#ff3d6e',14);g.beginPath();g.arc(x,y,r,0,7);g.fill();noglow();g.strokeStyle='#fff';g.lineWidth=1.5;g.beginPath();g.arc(x,y,r*.62,a-.9,a+.9);g.stroke()}
+function path(pts,close){g.beginPath();pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));if(close)g.closePath()}
+
+const ITEMS=[
+{n:'Outswinger',tag:'Swing',air:-1.3,turn:0,tb:.62,bh:36,text:'The ball curves away from a right-handed batter in the air, before it even pitches.',facts:['Grip: seam angled towards the slips, shiny side on the outside','Works best with a new ball and humid, overcast air','Edges fly to the wicketkeeper and slips'],res:'Swings away from the bat'},
+{n:'Inswinger',tag:'Swing',air:1.3,turn:0,tb:.62,bh:36,text:'Curves into the batter in the air, aiming at the pads and stumps.',facts:['Grip: seam angled towards fine leg, shiny side on the leg side','A fuller length makes LBW and bowled likely','Often used to set up an outswinger'],res:'Swings in towards the pads'},
+{n:'Off-cutter',tag:'Seam',air:0,turn:1,tb:.6,bh:38,text:'Fingers roll down the side of the ball at release, so it grips the pitch and nips back into a right-hander.',facts:['Only moves after it bounces','Slower than a stock ball, so it often beats the bat','Great on dry, gripping pitches'],res:'Cuts in off the pitch'},
+{n:'Leg-cutter',tag:'Seam',air:0,turn:-1,tb:.6,bh:38,text:'Fingers drag across the seam, so the ball bounces and moves away from a right-handed batter.',facts:['Looks like a normal delivery until it pitches','Finds the outside edge','A favourite of seamers like Glenn McGrath'],res:'Nips away off the seam'},
+{n:'Off-spin',tag:'Spin',air:.2,turn:1.6,tb:.66,bh:28,text:'Spun clockwise with the fingers. It turns from the off side to the leg side, into a right-hander.',facts:['Slower speed gives the ball time to dip and turn','Flight tempts batters to drive early','Famous exponent: Muttiah Muralitharan'],res:'Turns in, off to leg'},
+{n:'Leg-spin',tag:'Spin',air:-.2,turn:-1.6,tb:.66,bh:30,text:'Wrist spin. The ball turns from leg to off, away from a right-handed batter.',facts:['The wrist and fingers give extra revolutions on the ball','More bounce and sharper turn than finger spin','Famous exponent: Shane Warne'],res:'Turns away, leg to off'},
+{n:'Googly',tag:'Spin',air:.1,turn:1.6,ghost:-1.6,tb:.66,bh:30,text:'A leg-spinner with a disguise. The hand looks the same, but the wrist rotates so the ball turns the other way.',facts:['The faint path shows the leg-break the batter expects','Real path turns in towards the stumps','Also called the wrong-un'],res:'Looks like leg-spin, turns into the batter'},
+{n:'Yorker',tag:'Pace',air:0,turn:0,tb:.9,bh:10,text:'Pitched right at the batter\'s toes. It dips under the bat and goes for the stumps.',facts:['Hardest to hit in the last overs','A slight mistake becomes a full toss','Seen at its best from Wasim Akram and Jasprit Bumrah'],res:'Dips under the bat, crashes the stumps'},
+{n:'Bouncer',tag:'Pace',air:0,turn:0,tb:.5,bh:62,text:'Pitched short so it rises sharply towards chest or head height.',facts:['Forces the batter back or into a hook shot','Limited to a couple per over in most formats','Used to soften the batter before a full ball'],res:'Rises steeply at the batter'},
+{n:'Slower ball',tag:'Pace',air:0,turn:0,tb:.68,bh:42,len:.72,text:'Delivered with the same action but far less pace, so the batter swings too early.',facts:['Variations: knuckle ball, back-of-the-hand, cutter','The ball hangs in the air and arrives late','A death-over weapon'],res:'Arrives late and the shot is early'}];
+function draw(it,p,now){
+ base(now);const L=50,R=550,u=clamp((p-.08)/(it.len||.5),0,1);
+ const lat=(v,k)=>{let o=it.air*v*v;if(v>it.tb)o+=k*((v-it.tb)/(1-it.tb));return o};
+ const py=(v,k)=>130+lat(v,k)*26,hy=v=>455-(v<it.tb?150*(1-v/it.tb):it.bh*Math.sin(Math.PI*(v-it.tb)/(1-it.tb)*.72));
+ lab('TOP VIEW',L,34,'#8fdde8',16,'left');lab('SIDE VIEW',L,300,'#8fdde8',16,'left');
+ g.fillStyle='rgba(255,210,120,.12)';g.fillRect(L,80,R-L,100);g.strokeStyle='#ffd27a';g.lineWidth=1;g.strokeRect(L,80,R-L,100);
+ lab('Off side',R+2,92,'#8fdde8',14,'right');lab('Leg side',R+2,174,'#8fdde8',14,'right');
+ for(const x of[L,R])for(const d of[-8,0,8]){g.fillStyle='#fff';g.fillRect(x-2,130+d-2,4,4)}
+ if(it.ghost){g.setLineDash([5,5]);g.strokeStyle='rgba(255,95,210,.7)';g.lineWidth=2;g.beginPath();for(let v=0;v<=1;v+=.02)g.lineTo(L+(R-L)*v,py(v,it.ghost));g.stroke();g.setLineDash([]);lab('Expected leg-break',L+(R-L)*.5,200,'#ff5fd2',15)}
+ glow('#4df3ff',10);g.lineWidth=2.5;g.beginPath();for(let v=0;v<=u+.001;v+=.01)g.lineTo(L+(R-L)*v,py(v,it.turn));g.stroke();
+ g.beginPath();for(let v=0;v<=u+.001;v+=.01)g.lineTo(L+(R-L)*v,hy(v));g.stroke();noglow();
+ g.strokeStyle='rgba(255,255,255,.7)';g.lineWidth=2;g.beginPath();g.moveTo(L-20,455);g.lineTo(R+20,455);g.stroke();
+ for(const x of[L,R])for(const d of[-6,0,6]){g.fillStyle='#fff';g.fillRect(x+d-1.5,x==R?395:420,3,x==R?60:35)}
+ g.strokeStyle='#ffd27a';g.lineWidth=7;g.beginPath();g.moveTo(R-24,455);g.lineTo(R-20,375);g.stroke();
+ const bx=L+(R-L)*it.tb;for(const y of[py(it.tb,it.turn),455]){glow('#9dff6a',8);g.lineWidth=2;g.beginPath();g.arc(bx,y,9+3*Math.sin(now/150),0,7);g.stroke();noglow()}
+ lab('Pitches here',bx,y2(it),'#9dff6a',15);
+ const ang=u*(it.turn?9:4)*(it.turn<0?-1:1);ball(L+(R-L)*u,py(u,it.turn),8,ang);ball(L+(R-L)*u,hy(u),8,ang);
+ g.fillStyle='#d8fbff';g.beginPath();g.arc(L-18,hy(0)-6,7,0,7);g.fill();g.fillRect(L-21,hy(0),6,36);
+ if(p>.72){g.globalAlpha=clamp((p-.72)/.1,0,1);lab(it.res,300,500,'#ff5fd2',22);g.globalAlpha=1}}
+const y2=it=>it.tb>.8?478:482;
+
+function info(){const it=ITEMS[cur];$('#info').innerHTML='<span class="tag">'+it.tag+'</span><h2>'+it.n+'</h2><p>'+it.text+'</p><ul>'+it.facts.map(f=>'<li>'+f+'</li>').join('')+'</ul>';[...$('#list').children].forEach((b,i)=>b.setAttribute('aria-pressed',i==cur))}
+function sel(i){cur=(i+ITEMS.length)%ITEMS.length;pt=0;info()}
+ITEMS.forEach((it,i)=>{const b=document.createElement('button');b.textContent=it.n;b.onclick=()=>sel(i);$('#list').appendChild(b)});
+$('#rp').onclick=()=>pt=0;$('#sl').onclick=e=>{slow=!slow;e.target.setAttribute('aria-pressed',slow)};$('#pa').onclick=e=>{paused=!paused;e.target.setAttribute('aria-pressed',paused)};
+if(typeof F!=='undefined'){const sp=$('#sp');sp.hidden=false;sp.onclick=()=>{spin=!spin;sp.setAttribute('aria-pressed',spin)};let dx=null;cv.addEventListener('pointerdown',e=>{dx=e.clientX;cv.setPointerCapture(e.pointerId)});cv.addEventListener('pointermove',e=>{if(dx!==null){F.yaw+=(e.clientX-dx)*.01;dx=e.clientX}});cv.addEventListener('pointerup',()=>dx=null)}
+addEventListener('keydown',e=>{if(e.key==='ArrowRight')sel(cur+1);if(e.key==='ArrowLeft')sel(cur-1)});
+function loop(now){const dt=now-last;last=now;if(!paused)pt+=dt*(slow?.35:1);if(spin)F.yaw+=dt*.0005;const it=ITEMS[cur],dur=it.dur||4600;draw(it,(pt%dur)/dur,now);requestAnimationFrame(loop)}
+sel(0);requestAnimationFrame(loop);
+</script></body></html>
