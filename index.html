@@ -64,7 +64,8 @@ nav a.on{background:var(--c);color:#02202a;border-color:var(--c);box-shadow:0 0 
 </div>
 <script>
 const $=s=>document.querySelector(s),cv=$('#c'),g=cv.getContext('2d'),W=360,H=540,CX=180,HZ=150,GR=487;
-const TARGET=16,BALLS=6,WKS=2;
+let TARGET=16;
+const BALLS=6,WKS=2;
 const TYPES=[{n:'pace',d:1050,tb:.62,sw:0},{n:'yorker',d:900,tb:.8,sw:0},{n:'slower ball',d:1500,tb:.6,sw:0},{n:'off-cutter',d:1200,tb:.62,sw:34},{n:'bouncer',d:1000,tb:.48,sw:0},{n:'inswinger',d:1100,tb:.62,sw:-34}];
 const CROWD=['#ff3d6e','#4df3ff','#9dff6a','#d8fbff','#ff5fd2'];
 const SAY={6:['Out of the park!','Into the night sky!','That is miles!','Smashed into the stands!'],4:['Pierced the gap, four!','Races to the rope!','Pure timing, no effort!'],2:['Worked into the gap for two.','Hustled back for the second.'],1:['Nudged for a single.','Mistimed but safe, one run.'],0:['Beaten! Nothing doing.','Played too early, no run.','Solid. No run.'],W:['Bowled him! Stumps shattered!','Clean bowled, timber!','Late on it, and it crashes into the stumps!']};
@@ -90,8 +91,8 @@ function hud(){const left=BALLS-S.ball,need=TARGET-S.runs;
  $('#need').textContent=need>0?`Need ${need} off ${left}`:'Target chased!';
  $('#wk').textContent=`Wickets in hand: ${WKS-S.wk}`}
 function dots(){$('#dots').innerHTML=Array.from({length:BALLS},(_,i)=>{const h=S.hist[i];if(h===undefined)return'<span></span>';const c=h==='W'?'w':h==6?'s':h==4?'f':'r';return`<span class="${c}">${h===0?'•':h}</span>`}).join('')}
-function newGame(){S={phase:'idle',runs:0,wk:0,ball:0,hist:[],sixes:0,fours:0};hud();dots()}
-function start(){if(S.phase!=='idle'&&S.phase!=='over')return;au();newGame();$('#ov').classList.add('hide');setCm('Six balls. Watch the ball, trust the timing.');setTimeout(startBall,500)}
+function newGame(){TARGET=Math.floor(Math.random()*27)+10;S={phase:'idle',runs:0,wk:0,ball:0,hist:[],sixes:0,fours:0};hud();dots();$('#op').textContent=`${TARGET} to win. Six balls. Two wickets. The crowd is on its feet.`;}
+function start(){if(S.phase!=='idle'&&S.phase!=='over')return;au();if(S.phase==='over')newGame();$('#ov').classList.add('hide');setCm('Six balls. Watch the ball, trust the timing.');setTimeout(startBall,500)}
 function startBall(){const now=performance.now();S.dl=pick(TYPES);S.phase='runup';S.t0=now+1000;S.T=S.t0+S.dl.d;S.swung=false;S.trail=[]}
 function setCm(h){$('#cm').innerHTML=h}
 function popText(t,out){const p=$('#pop');p.textContent=t;p.className=out?'out':'';void p.offsetWidth;p.classList.add('show')}
